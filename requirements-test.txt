@@ -1,0 +1,4 @@
+# Specifies only test-specific requirements
+pytest
+mock
+ddt

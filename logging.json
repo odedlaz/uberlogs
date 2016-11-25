@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {
+    "json": {
+      "()": "uberlogs.JsonFormatter",
+      "indent": 3,
+      "parse_text": true,
+      "include_format_keywords": true
+    },
+    "concat": {
+      "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+      "()": "uberlogs.ConcatFormatter",
+      "delimiter": "; ",
+      "operator": ": ",
+      "log_in_color": true,
+      "include_format_keywords": false,
+      "parse_text": true
+    }
+  },
+  "handlers": {
+    "console": {
+      "class": "logging.StreamHandler",
+      "level": "DEBUG",
+      "formatter": "concat",
+      "stream": "ext://sys.stdout"
+    },
+    "json_console": {
+      "class": "logging.StreamHandler",
+      "level": "DEBUG",
+      "formatter": "json",
+      "stream": "ext://sys.stdout"
+    }
+  },
+  "loggers": {},
+  "root": {
+    "level": "DEBUG",
+    "handlers": [
+      "console",
+      "json_console"
+    ],
+    "propagate": "no"
+  }
+}
