@@ -1,4 +1,5 @@
-import json
+import six
+import ujson as json
 import copy
 from logging import Formatter as LoggingFormatter
 from datetime import datetime, tzinfo, timedelta
@@ -10,8 +11,16 @@ from ..private import (rewrite_record,
 
 
 class ConcatFormatter(LoggingFormatter):
-    message_format = u"{0.key}{1}{0.value}"
-    log_line_format = u"{message}{delimiter}{parameters}"
+    message_format = u"{0}{operator}{1}"
+    line_format = u"{message}{delimiter}{parameters}"
+    color_format = "{color}{text}\x1b[0m"
+    log_color_map = {
+        level.DEBUG: '\x1b[32m',
+        level.INFO: '\x1b[0m',
+        level.WARNING: '\x1b[33m',
+        level.ERROR: '\x1b[31m',
+        level.CRITICAL: '\x1b[35m',
+    }
 
     def __init__(self, operator=":",
                  delimiter=";",
@@ -29,51 +38,40 @@ class ConcatFormatter(LoggingFormatter):
         self.parse_text = parse_text
         self.color = log_in_color
         self.include_format_keywords = include_format_keywords
-        if self.color:
-            globals()["colorclass"] = __import__("colorclass")
-            self._color_fmt = '{{{color}}}{text}{{/{color}}}'
-            self._log_message_color = {
-                level.DEBUG: "cyan",
-                level.INFO: "white",
-                level.WARNING: "yellow",
-                level.ERROR: "red",
-                level.CRITICAL: "magenta",
-            }
 
     def format(self, record):
         # create a clone of the record,
         # to make sure we don't change the original
         record = copy.copy(record)
+        kw = extract_keywords(record)
 
-        # couldn've used list(...) but less understandable
-        arguments = [arg for arg in rewrite_record(record)]
+        arguments = dict(rewrite_record(record))
+
         # get the none formatted message (not getMessage())
         message = str(record.msg)
 
-        kw = list(extract_keywords(message))
-
         if self.parse_text:
-
-            message = message.format(**{f.key: f.value
-                                        for f in arguments})
+            message = message.format(**arguments)
 
         if arguments:
             include_keywords = self.include_format_keywords
             if not self.parse_text:
                 include_keywords = True
 
-            parameters = [self.message_format.format(arg, self.operator)
-                          for arg in arguments if include_keywords or arg.key not in kw]
+            parameters = [self.message_format.format(operator=self.operator,
+                                                     *(key, val))
+                          for key, val in six.iteritems(arguments)
+                          if include_keywords or key not in kw]
 
             if parameters:
-                message = self.log_line_format.format(message=message,
-                                                      delimiter=self.delimiter,
-                                                      parameters=self.delimiter.join(sorted(parameters)))
+                paramstring = self.delimiter.join(sorted(parameters))
+                message = self.line_format.format(message=message,
+                                                  delimiter=self.delimiter,
+                                                  parameters=paramstring)
 
         if self.color:
-            color = self._log_message_color[record.levelno]
-            message = colorclass.Color(self._color_fmt.format(text=message,
-                                                              color=color))
+            color = self.log_color_map[record.levelno]
+            message = self.color_format.format(color=color, text=message)
 
         record.msg = message
 

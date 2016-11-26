@@ -1,33 +1,12 @@
-import json
+import six
+import ujson as json
 import logging
 import logging.config
 from collections import namedtuple
 from string import Formatter as StringFormatter
 from datetime import datetime, tzinfo, timedelta
 from inspect import currentframe as currentframe
-
-
-FIELD_PREFIX = "__"
-
-KeyValueTuple = namedtuple('KeyValueTuple', ['key', 'value'])
-
-
-class JsonEncoder(json.JSONEncoder):
-
-    class SimpleUTC(tzinfo):
-
-        def tzname(self):
-            return "UTC"
-
-        def utcoffset(self, dt):
-            return timedelta(0)
-
-    def default(self, obj):
-        if isinstance(obj, datetime):
-            dt = obj.replace(tzinfo=JsonEncoder.SimpleUTC(),
-                             microsecond=0)
-            return dt.isoformat()
-        return json.JSONEncoder.default(self, obj)
+from itertools import chain
 
 
 class UberStringFormatter(StringFormatter):
@@ -45,10 +24,12 @@ class UberStringFormatter(StringFormatter):
 string_formatter = UberStringFormatter()
 
 
-def extract_keywords(text, silent=False):
-    for _, fname, _, _ in string_formatter.parse(text, silent=silent):
-        if fname:
-            yield fname
+def extract_keywords(record):
+    extra = getattr(record, "extra", None)
+    if extra is None:
+        raise ValueError("extra is missing")
+
+    return extra["kw"]
 
 
 def text_keywords(text, caller, **log_args):
@@ -57,8 +38,10 @@ def text_keywords(text, caller, **log_args):
     and evaluate them in caller scope.
     """
     keywords = {}
-    for fname in extract_keywords(text, silent=True):
-        if fname in log_args:
+
+    for _, fname, _, _ in string_formatter.parse(text,
+                                                 silent=True):
+        if not fname or fname in log_args:
             continue
 
         # valid format names can't have dots in them
@@ -78,33 +61,35 @@ def rewrite_record(record):
     rewrite the record to remove unique fields __ prefix.
     :return: the unique fields
     """
-    for key, value in record.__dict__.items():
-        if not key.startswith(FIELD_PREFIX):
-            continue
-        skey = key.lstrip(FIELD_PREFIX)
-        delattr(record, key)
-        if hasattr(record, skey):
+    extra = getattr(record, "extra", None)
+    if extra is None:
+        raise StopIteration()
+
+    delattr(record, "extra")
+
+    for key, value in chain(*map(six.iteritems, [extra["extra"],
+                                                 extra["kw"]])):
+        if hasattr(record, key):
             fmt = "'{key}' string is reserved for logging ({msg})"
-            raise ValueError(fmt.format(key=skey, msg=record.msg))
-        setattr(record, skey, value)
-        yield KeyValueTuple(key=skey,
-                            value=value)
+            raise ValueError(fmt.format(key=key, msg=record.msg))
+
+        setattr(record, key, value)
+        yield (key, value)
 
 
 def log_message(logger, level, msg, args, exc_info=None, extra=None, **kwargs):
-    unified_args = dict(extra, **kwargs) if extra else kwargs
+    extra = dict(extra, **kwargs) if extra else kwargs
 
     frame = currentframe()
 
     msg, keywords = text_keywords(text=msg,
                                   caller=frame.f_back.f_back,
-                                  **unified_args)
+                                  **extra)
 
-    unified_args.update(keywords)
-
-    extra = {FIELD_PREFIX + key: val for key, val in unified_args.items()}
     try:
-        return logging.Logger._log(logger, level, msg, args, exc_info, extra)
+        return logging.Logger._log(logger, level, msg, args, exc_info,
+                                   extra=dict(extra=dict(extra=extra,
+                                                         kw=keywords)))
     finally:
         # why delete the frame?
         # VERSION: 2 or 3

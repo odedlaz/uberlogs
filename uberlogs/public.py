@@ -1,9 +1,8 @@
 import logging
 import logging.config
-from .private import (text_keywords,
-                      FIELD_PREFIX,
-                      log_message)
 from functools import partial
+from .private import (text_keywords,
+                      log_message)
 
 
 try:
@@ -40,7 +39,7 @@ def install(default_path='logging.json',
     path = os.getenv(env_key, default_path)
     if os.path.exists(path):
         with open(path, 'rt') as f:
-            import json
+            import ujson as json
             content = json.load(f)
         logging.config.dictConfig(content)
     else:

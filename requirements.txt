@@ -1,1 +1,3 @@
-colorclass
+# package requirements
+ujson
+six

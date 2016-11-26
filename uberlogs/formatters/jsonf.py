@@ -1,10 +1,10 @@
-import json
+import six
 import copy
+import ujson as json
 from datetime import datetime
 from logging import Formatter as LoggingFormatter
-
-from ..private import (JsonEncoder,
-                       rewrite_record,
+from math import floor
+from ..private import (rewrite_record,
                        string_formatter,
                        extract_keywords)
 
@@ -20,7 +20,7 @@ class JsonFormatter(LoggingFormatter):
         Initialize the handler.
         If stream is not specified, sys.stderr is used.
         """
-        if not all(x is None for x in [fmt, datefmt]):
+        if fmt is not None or datefmt is not None:
             msg = "JsonFormatter doesn't allow to set 'format' and 'datefmt'!"
             raise ValueError(msg)
 
@@ -41,13 +41,12 @@ class JsonFormatter(LoggingFormatter):
         # to make sure we don't change the original
         record = copy.copy(record)
 
+        kw = extract_keywords(record)
+
         # get the message and format it
         message = record.getMessage()
 
-        kw = list(extract_keywords(message))
-
-        arguments = {arg.key: arg.value
-                     for arg in rewrite_record(record)}
+        arguments = dict(rewrite_record(record))
 
         if self.parse_text:
             message = message.format(**arguments)
@@ -61,8 +60,8 @@ class JsonFormatter(LoggingFormatter):
                        level=record.levelname,
                        file=record.pathname,
                        func=record.funcName,
-                       time=datetime.fromtimestamp(record.created),
-                       **{k: v for k, v in arguments.items()
+                       epoch=floor(record.created),
+                       **{k: v for k, v in six.iteritems(arguments)
                           if include_keywords or k not in kw})
 
         if record.exc_info:
@@ -71,7 +70,6 @@ class JsonFormatter(LoggingFormatter):
 
         record.json = json.dumps(message,
                                  sort_keys=True,
-                                 indent=self.indent,
-                                 cls=JsonEncoder)
+                                 indent=self.indent)
         # call the original handler
         return super(JsonFormatter, self).format(record)
