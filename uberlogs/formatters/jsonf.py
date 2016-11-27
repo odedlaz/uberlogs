@@ -12,6 +12,8 @@ class JsonFormatter(SimpleJsonFormatter):
         if not self.uber_record(record):
             return msg_obj
 
+        keywords = extract_keywords(record)
+
         arguments = dict(rewrite_record(record))
 
         message = record.getMessage()
@@ -22,9 +24,12 @@ class JsonFormatter(SimpleJsonFormatter):
         msg_obj["message"] = message
 
         include_keywords = self.include_format_keywords
+
         if not self.parse_text:
             include_keywords = True
 
-        return dict(msg_obj,
-                    **{k: v for k, v in six.iteritems(arguments)
-                       if include_keywords or k not in keywords})
+        if not include_keywords:
+            arguments = {k: v for k, v in six.iteritems(arguments)
+                         if k not in keywords}
+
+        return dict(msg_obj, **arguments)

@@ -27,7 +27,8 @@ string_formatter = UberStringFormatter()
 def extract_keywords(record):
     extra = getattr(record, "extra", None)
     if extra is None:
-        raise ValueError("extra is missing")
+        msg = "extra is missing, maybe you 'rewrite_record' already?"
+        raise ValueError(msg)
 
     return extra["kw"]
 
