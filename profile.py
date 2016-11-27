@@ -1,12 +1,12 @@
 from __future__ import print_function
 import os
+import gc
 import sys
 import time
 import logging
 import uberlogs
 from six.moves import range
 from collections import namedtuple
-
 Person = namedtuple('Person', ['name', 'age'])
 
 
@@ -19,11 +19,18 @@ class TimeIt(object):
             scope_name)
 
     def __enter__(self):
+        # run the garbage collector
+        # then disable it so it won't tamper with the measurments
+        gc.collect()
+        gc.disable()
         self._start = time.time()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         now = time.time() - self._start
         print(self._fmt.format(secs=now).strip(), file=self._fd)
+
+        # enable garbage collection after we're done with measurments
+        gc.enable()
 
 
 uberlogs.install()
