@@ -59,6 +59,24 @@ logger.info("I'm eating a {eatable.name}", extra=dict(flavor=eatable.flavor,
 # 1970-1-1 18:26:17,578 - test - INFO - I'm eating a bagel; flavor: salty; location: tel-aviv
 ```
 
+## Performance
+
+A `profile.py` file exists that compares uberlog with logging. logs are written to stdout, while profiling is written to stderr.
+
+The **ITERATIONS** environment variable is used to specify the number of test iterations.
+
+For example, the current version output on my computer is:
+
+```bash
+$ ITERATIONS=100000 python profile.py 1> /dev/null
+Profiling 100000 iterations
+---------------------------
+took 6.20215 seconds to run [std %]
+took 6.16624 seconds to run [std .format()]
+took 10.24452 seconds to run [uber .format()]
+took 12.96558 seconds to run [uber .format() with statement]
+```
+
 ## Example
 
 If you run this code...
