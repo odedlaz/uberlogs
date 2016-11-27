@@ -77,6 +77,13 @@ took 0.96614 seconds to run [uber .format()]
 took 1.16048 seconds to run [uber .format() with statement]
 ```
 
+I recommend using line_profiler to see profiling data. The code has all the needed attributes to make it work out of the box.
+
+All you need to do is:
+
+- install: `pip install line_profiler`
+- profile: `kernprof -l -v profile.py`
+
 ## Example
 
 If you run this code...
