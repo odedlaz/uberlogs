@@ -1,6 +1,5 @@
 import six
 import ujson as json
-from copy import copy
 from logging import Formatter as LoggingFormatter
 from logging import LogRecord
 from datetime import datetime, tzinfo, timedelta
@@ -35,9 +34,7 @@ class ConcatFormatter(UberFormatter):
         self.color = log_in_color
 
     @profile
-    def _uber_format(self, record):
-        record = copy(record)
-
+    def _uber_message(self, record):
         # get the none formatted message (not getMessage())
         message = str(record.msg)
         if self.parse_text:
@@ -63,14 +60,16 @@ class ConcatFormatter(UberFormatter):
             color = self.log_color_map[record.levelno]
             message = self.color_format.format(color=color, text=message)
 
-        record.msg = message
-
-        return record
+        return message
 
     def format(self, record):
         # create a clone of the record,
         # to make sure we don't change the original
+        uber_message = record.msg
         if self.uber_record(record):
-            record = self._uber_format(record)
+            uber_message = self._uber_message(record)
+
+        record.uber_message = uber_message
+
         # call the original handler
         return super(ConcatFormatter, self).format(record)

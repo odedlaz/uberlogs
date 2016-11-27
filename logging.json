@@ -9,7 +9,7 @@
       "include_format_keywords": true
     },
     "concat": {
-      "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+      "format": "%(asctime)s - %(name)s - %(levelname)s - %(uber_message)s",
       "()": "uberlogs.ConcatFormatter",
       "delimiter": "; ",
       "operator": ": ",

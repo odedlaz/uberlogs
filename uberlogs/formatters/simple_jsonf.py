@@ -1,4 +1,3 @@
-from copy import copy
 import ujson as json
 from math import floor
 from .base import UberFormatter
@@ -16,7 +15,8 @@ class SimpleJsonFormatter(UberFormatter):
             msg = "JsonFormatter doesn't allow to set 'format' and 'datefmt'!"
             raise ValueError(msg)
 
-        super(SimpleJsonFormatter, self).__init__(fmt="%(json)s", **kwargs)
+        super(SimpleJsonFormatter, self).__init__(fmt="%(uber_json)s",
+                                                  **kwargs)
         self.indent = indent
 
     def formatException(self, exc_info):
@@ -47,11 +47,9 @@ class SimpleJsonFormatter(UberFormatter):
         # to make sure we don't change the original
 
         # get the message and format it
-        record = copy(record)
-
         msg_obj = self._get_message_obj(record)
-        record.json = json.dumps(msg_obj,
-                                 sort_keys=True,
-                                 indent=self.indent)
+        record.uber_json = json.dumps(msg_obj,
+                                      sort_keys=True,
+                                      indent=self.indent)
 
         return super(SimpleJsonFormatter, self).format(record)
