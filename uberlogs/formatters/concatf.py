@@ -1,7 +1,8 @@
 import six
 import ujson as json
-import copy
+from copy import copy
 from logging import Formatter as LoggingFormatter
+from logging import LogRecord
 from datetime import datetime, tzinfo, timedelta
 
 from .. import level
@@ -35,26 +36,22 @@ class ConcatFormatter(UberFormatter):
 
     @profile
     def _uber_format(self, record):
-        record = copy.copy(record)
-
-        arguments = getattr(record, "uber_extra")
+        record = copy(record)
 
         # get the none formatted message (not getMessage())
         message = str(record.msg)
         if self.parse_text:
-            message = message.format(**arguments)
+            message = message.format(**record.uber_extra)
 
-        if arguments:
+        if record.uber_extra:
             include_keywords = self.include_format_keywords
             if not self.parse_text:
                 include_keywords = True
 
-            kws = getattr(record, "uber_kws")
-
             parameters = {self.message_format.format(operator=self.operator,
                                                      *(key, val))
-                          for key, val in six.iteritems(arguments)
-                          if include_keywords or key not in kws}
+                          for key, val in six.iteritems(record.uber_extra)
+                          if include_keywords or key not in record.uber_kws}
 
             if parameters:
                 paramstring = self.delimiter.join(sorted(parameters))

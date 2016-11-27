@@ -11,7 +11,7 @@ class JsonFormatter(SimpleJsonFormatter):
         if not self.uber_record(record):
             return msg_obj
 
-        arguments = getattr(record, "uber_extra")
+        arguments = record.uber_extra
 
         message = record.getMessage()
 
@@ -25,10 +25,8 @@ class JsonFormatter(SimpleJsonFormatter):
         if not self.parse_text:
             include_keywords = True
 
-        kws = getattr(record, "uber_kws")
-
         if not include_keywords:
             arguments = {k: v for k, v in six.iteritems(arguments)
-                         if k not in kws}
+                         if k not in record.uber_kws}
 
         return dict(msg_obj, **arguments)
