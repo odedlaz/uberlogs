@@ -22,6 +22,7 @@ def getLogger(name):
     return logger
 
 
+@profile
 def install(default_path='logging.json',
             default_level=logging.INFO,
             env_key='LOG_CFG',

@@ -1,20 +1,17 @@
 import six
-from ..private import (rewrite_record,
-                       extract_keywords)
 
 from .simple_jsonf import SimpleJsonFormatter
 
 
 class JsonFormatter(SimpleJsonFormatter):
 
+    @profile
     def _get_message_obj(self, record):
         msg_obj = super(JsonFormatter, self)._get_message_obj(record)
         if not self.uber_record(record):
             return msg_obj
 
-        keywords = extract_keywords(record)
-
-        arguments = dict(rewrite_record(record))
+        arguments = getattr(record, "uber_extra")
 
         message = record.getMessage()
 
@@ -28,8 +25,10 @@ class JsonFormatter(SimpleJsonFormatter):
         if not self.parse_text:
             include_keywords = True
 
+        kws = getattr(record, "uber_kws")
+
         if not include_keywords:
             arguments = {k: v for k, v in six.iteritems(arguments)
-                         if k not in keywords}
+                         if k not in kws}
 
         return dict(msg_obj, **arguments)

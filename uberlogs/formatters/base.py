@@ -1,6 +1,5 @@
 from copy import copy
 from logging import Formatter as LoggingFormatter
-from ..private import extract_keywords
 
 
 class UberFormatter(LoggingFormatter):
@@ -11,4 +10,5 @@ class UberFormatter(LoggingFormatter):
         self.include_format_keywords = include_format_keywords
 
     def uber_record(self, record):
-        return getattr(record, 'uber', False)
+        return hasattr(record, 'uber_extra') \
+            and hasattr(record, 'uber_kws')

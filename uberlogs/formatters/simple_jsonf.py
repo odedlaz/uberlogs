@@ -2,6 +2,7 @@ from copy import copy
 import ujson as json
 from math import floor
 from .base import UberFormatter
+from logging import Formatter as LoggingFormatter
 
 
 class SimpleJsonFormatter(UberFormatter):
@@ -25,6 +26,7 @@ class SimpleJsonFormatter(UberFormatter):
         """
         return ""
 
+    @profile
     def _get_message_obj(self, record):
         msg_obj = dict(message=record.getMessage(),
                        logger=record.name,
@@ -39,6 +41,7 @@ class SimpleJsonFormatter(UberFormatter):
 
         return msg_obj
 
+    @profile
     def format(self, record):
         # create a clone of the record,
         # to make sure we don't change the original

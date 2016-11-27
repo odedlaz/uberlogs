@@ -5,6 +5,7 @@ from logging import Handler as LoggingHandler
 
 class KillProcessHandler(LoggingHandler):
 
+    @profile
     def emit(self, record):
         if record.levelno != self.level:
             return

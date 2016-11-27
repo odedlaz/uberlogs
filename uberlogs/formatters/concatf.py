@@ -6,9 +6,6 @@ from datetime import datetime, tzinfo, timedelta
 
 from .. import level
 from .base import UberFormatter
-from ..private import (rewrite_record,
-                       string_formatter,
-                       extract_keywords)
 
 
 class ConcatFormatter(UberFormatter):
@@ -36,15 +33,14 @@ class ConcatFormatter(UberFormatter):
         self.operator = operator
         self.color = log_in_color
 
+    @profile
     def _uber_format(self, record):
         record = copy.copy(record)
-        kw = extract_keywords(record)
 
-        arguments = dict(rewrite_record(record))
+        arguments = getattr(record, "uber_extra")
 
         # get the none formatted message (not getMessage())
         message = str(record.msg)
-
         if self.parse_text:
             message = message.format(**arguments)
 
@@ -53,10 +49,12 @@ class ConcatFormatter(UberFormatter):
             if not self.parse_text:
                 include_keywords = True
 
-            parameters = [self.message_format.format(operator=self.operator,
+            kws = getattr(record, "uber_kws")
+
+            parameters = {self.message_format.format(operator=self.operator,
                                                      *(key, val))
                           for key, val in six.iteritems(arguments)
-                          if include_keywords or key not in kw]
+                          if include_keywords or key not in kws}
 
             if parameters:
                 paramstring = self.delimiter.join(sorted(parameters))
@@ -77,6 +75,5 @@ class ConcatFormatter(UberFormatter):
         # to make sure we don't change the original
         if self.uber_record(record):
             record = self._uber_format(record)
-
         # call the original handler
         return super(ConcatFormatter, self).format(record)
