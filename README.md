@@ -71,10 +71,10 @@ For example, the current version output on my computer is:
 $ ITERATIONS=100000 python profile.py 1> /dev/null
 Profiling 100000 iterations
 ---------------------------
-took 6.20215 seconds to run [std %]
-took 6.16624 seconds to run [std .format()]
-took 10.24452 seconds to run [uber .format()]
-took 12.96558 seconds to run [uber .format() with statement]
+took 8.62746 seconds to run [std %]
+took 9.35214 seconds to run [std .format()]
+took 9.02776 seconds to run [uber .format()]
+took 14.40288 seconds to run [uber .format() with statement]
 ```
 
 ## Example

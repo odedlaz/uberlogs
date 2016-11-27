@@ -1,4 +1,18 @@
 from __future__ import print_function
+from six.moves import builtins
+
+if not hasattr(builtins, 'profile'):
+    from functools import wraps
+
+    def profile(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        return wrapper
+
+    builtins.profile = profile
+
+
 import os
 import sys
 import time
@@ -6,7 +20,6 @@ import logging
 import uberlogs
 from six.moves import range
 from collections import namedtuple
-
 
 Person = namedtuple('Person', ['name', 'age'])
 
@@ -37,7 +50,6 @@ msg = "Profiling {} iterations".format(iterations)
 print("{msg}\n{underline}".format(msg=msg,
                                   underline="-" * len(msg)),
       file=sys.stderr)
-
 
 # run test with std logging using % formatting
 old_simple_fmt = "Hey! my name is %s, and my age is: %s!"
