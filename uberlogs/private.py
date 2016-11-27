@@ -34,7 +34,7 @@ class LRUCache(object):
             if len(self.cache) >= self.capacity:
                 self.cache.popitem(last=False)
 
-        self.cache[str(key)] = value
+        self.cache[key] = value
 
     def __setitem__(self, key, value):
         return self.set(key, value)
