@@ -5,12 +5,13 @@ from logging import Formatter as LoggingFormatter
 from datetime import datetime, tzinfo, timedelta
 
 from .. import level
+from .base import UberFormatter
 from ..private import (rewrite_record,
                        string_formatter,
                        extract_keywords)
 
 
-class ConcatFormatter(LoggingFormatter):
+class ConcatFormatter(UberFormatter):
     message_format = u"{0}{operator}{1}"
     line_format = u"{message}{delimiter}{parameters}"
     color_format = "{color}{text}\x1b[0m"
@@ -25,8 +26,6 @@ class ConcatFormatter(LoggingFormatter):
     def __init__(self, operator=":",
                  delimiter=";",
                  log_in_color=False,
-                 parse_text=False,
-                 include_format_keywords=False,
                  **kwargs):
         """
         Initialize the handler.
@@ -35,13 +34,9 @@ class ConcatFormatter(LoggingFormatter):
         # https://docs.python.org/2/library/logging.html#logrecord-attributes
         self.delimiter = delimiter
         self.operator = operator
-        self.parse_text = parse_text
         self.color = log_in_color
-        self.include_format_keywords = include_format_keywords
 
-    def format(self, record):
-        # create a clone of the record,
-        # to make sure we don't change the original
+    def _uber_format(self, record):
         record = copy.copy(record)
         kw = extract_keywords(record)
 
@@ -74,6 +69,14 @@ class ConcatFormatter(LoggingFormatter):
             message = self.color_format.format(color=color, text=message)
 
         record.msg = message
+
+        return record
+
+    def format(self, record):
+        # create a clone of the record,
+        # to make sure we don't change the original
+        if self.uber_record(record):
+            record = self._uber_format(record)
 
         # call the original handler
         return super(ConcatFormatter, self).format(record)

@@ -88,8 +88,8 @@ def log_message(logger, level, msg, args, exc_info=None, extra=None, **kwargs):
 
     try:
         return logging.Logger._log(logger, level, msg, args, exc_info,
-                                   extra=dict(extra=dict(extra=extra,
-                                                         kw=keywords)))
+                                   extra=dict(uber=True, extra=dict(extra=extra,
+                                                                    kw=keywords)))
     finally:
         # why delete the frame?
         # VERSION: 2 or 3
