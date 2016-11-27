@@ -8,6 +8,7 @@ from datetime import datetime, tzinfo, timedelta
 from inspect import currentframe as currentframe
 from itertools import chain
 from six.moves import builtins
+from collections import namedtuple
 
 
 class LRUCache(object):
@@ -55,7 +56,9 @@ class UberStringFormatter(StringFormatter):
 
 string_formatter = UberStringFormatter()
 
-memoize = LRUCache(capacity=15000)
+keyword_cache = LRUCache(capacity=15000)
+Keyword = namedtuple('Keyword', ['text', 'fnames'])
+
 
 transtable = str.maketrans("[].", "___")
 
@@ -66,30 +69,25 @@ def text_keywords(text, caller, log_args):
     extract keyword arguments from format text
     and evaluate them in caller scope.
     """
-    keywords = {}
-    fnames = memoize.get(text)
+    keyword = keyword_cache.get(text)
 
-    if fnames is None:
+    if keyword is None:
         fnames = [(fname, fname.translate(transtable)) for _, fname, _, _
                   in string_formatter.parse(text, silent=True)
-                  if fname]
+                  if fname and fname not in log_args]
 
-        memoize[text] = fnames
+        valid_text = text
+        for fname, valid_fname in fnames:
+            valid_text = valid_text.replace(fname, valid_fname)
 
-    for fname, valid_fname in fnames:
-        # valid format names can't have dots in them
+        keyword_cache[text] = keyword = Keyword(text=valid_text, fnames=fnames)
 
-        if valid_fname in log_args:
-            continue
+    keywords = {valid_fname: eval(fname,
+                                  caller.f_globals,
+                                  caller.f_locals)
+                for fname, valid_fname in keyword.fnames}
 
-        keywords[valid_fname] = eval(fname,
-                                     caller.f_globals,
-                                     caller.f_locals)
-
-        # update the format text to have valid names
-        text = text.replace(fname, valid_fname)
-
-    return text, keywords
+    return keyword.text, keywords
 
 
 @profile
