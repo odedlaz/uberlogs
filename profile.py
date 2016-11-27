@@ -15,7 +15,8 @@ class TimeIt(object):
     def __init__(self, scope_name="", fd=sys.stdout):
         self._start = None
         self._fd = fd
-        self._fmt = 'took {{secs:.5f}} seconds to run [{}]'.format(scope_name)
+        self._fmt = 'block took {{secs:.5f}} seconds to run [{}]'.format(
+            scope_name)
 
     def __enter__(self):
         self._start = time.time()
