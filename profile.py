@@ -1,18 +1,4 @@
 from __future__ import print_function
-from six.moves import builtins
-
-if not hasattr(builtins, 'profile'):
-    from functools import wraps
-
-    def profile(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
-        return wrapper
-
-    builtins.profile = profile
-
-
 import os
 import sys
 import time
