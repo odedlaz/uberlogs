@@ -124,7 +124,8 @@ def log_message(logger, level, msg, args, exc_info=None, extra=None, **kwargs):
                                   caller=caller,
                                   log_args=extra)
 
-    extra = dict(keywords, **extra)
+    if keywords:
+        extra = dict(keywords, **extra)
 
     try:
         return logging.Logger._log(logger, level, msg, args, exc_info,
