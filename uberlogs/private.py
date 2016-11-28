@@ -2,13 +2,12 @@ import six
 import ujson as json
 import logging
 import logging.config
-from collections import namedtuple
+from recordclass import recordclass
 from string import Formatter as StringFormatter
 from datetime import datetime, tzinfo, timedelta
 from inspect import currentframe as currentframe
 from itertools import chain
 from six.moves import builtins
-from collections import namedtuple
 
 if six.PY3:
     from _string import formatter_field_name_split
@@ -72,14 +71,10 @@ string_formatter = UberStringFormatter()
 
 compiled_log_msg_cache = LRUCache(capacity=100)
 
-
-class CompiledLogMessage(object):
-
-    def __init__(self, text, keywords, code):
-        self.cached = False
-        self.text = text
-        self.keywords = keywords
-        self.code = code
+CompiledLogMessage = recordclass('CompiledLogMessage', ['cached',
+                                                        'text',
+                                                        'keywords',
+                                                        'code'])
 
 valid_chars_transtable = maketrans("[].", "___")
 
@@ -110,6 +105,7 @@ def text_keywords(text, caller, log_args):
 
         log_msg = CompiledLogMessage(text=valid_text,
                                      keywords=keywords,
+                                     cached=False,
                                      code=compile("\n".join(code),
                                                   '<string>',
                                                   'exec'))
