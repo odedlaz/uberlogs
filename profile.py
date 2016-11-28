@@ -1,6 +1,7 @@
 from __future__ import print_function
 import os
 import gc
+import six
 import sys
 import time
 import logging
@@ -8,6 +9,7 @@ import uberlogs
 from six.moves import range
 from collections import namedtuple
 Person = namedtuple('Person', ['name', 'age', 'favorite_colors', 'single'])
+PYTHON_VERSION = "{0.major}.{0.minor}.{0.micro}".format(sys.version_info)
 
 
 class TimeIt(object):
@@ -43,7 +45,10 @@ p = Person(name="oded",
 
 iterations = int(os.getenv("ITERATIONS", 1))
 
-msg = "Profiling {} iterations".format(iterations)
+
+msg = "Profiling {} iterations [python {}]".format(iterations,
+                                                   PYTHON_VERSION)
+
 print("{msg}\n{underline}".format(msg=msg,
                                   underline="-" * len(msg)),
       file=sys.stderr)

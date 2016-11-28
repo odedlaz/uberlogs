@@ -9,11 +9,19 @@ from inspect import currentframe as currentframe
 from itertools import chain
 from six.moves import builtins
 from collections import namedtuple
-from string import _string
+
+if six.PY3:
+    from _string import formatter_field_name_split
+    maketrans = str.maketrans
+elif six.PY2:
+    from string import maketrans
+    formatter_field_name_split = str._formatter_field_name_split
+else:
+    raise ImportError("Unknown python version")
 
 
 def field_name_split(field_name):
-    field_name, _ = _string.formatter_field_name_split(field_name)
+    field_name, _ = formatter_field_name_split(field_name)
     return field_name
 
 
@@ -73,7 +81,7 @@ class CompiledLogMessage(object):
         self.keywords = keywords
         self.code = code
 
-valid_chars_transtable = str.maketrans("[].", "___")
+valid_chars_transtable = maketrans("[].", "___")
 
 
 @profile
