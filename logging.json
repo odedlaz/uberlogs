@@ -6,7 +6,7 @@
       "()": "uberlogs.JsonFormatter",
       "indent": 3,
       "parse_text": true,
-      "include_format_keywords": true
+      "include_format_keywords": false
     },
     "concat": {
       "format": "%(asctime)s - %(name)s - %(levelname)s - %(uber_message)s",

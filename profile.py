@@ -7,7 +7,7 @@ import logging
 import uberlogs
 from six.moves import range
 from collections import namedtuple
-Person = namedtuple('Person', ['name', 'age'])
+Person = namedtuple('Person', ['name', 'age', 'favorite_colors', 'single'])
 
 
 class TimeIt(object):
@@ -36,7 +36,10 @@ class TimeIt(object):
 uberlogs.install()
 uber_logger = uberlogs.getLogger("uber")
 std_logger = logging.getLogger("std")
-p = Person(name="oded", age=26)
+p = Person(name="oded",
+           age=26,
+           favorite_colors=["green", "yellow"],
+           single=False)
 
 iterations = int(os.getenv("ITERATIONS", 1))
 
@@ -46,24 +49,29 @@ print("{msg}\n{underline}".format(msg=msg,
       file=sys.stderr)
 
 # run test with std logging using % formatting
-old_simple_fmt = "Hey! my name is %s, and my age is: %s!"
+old_simple_fmt = "Hey! my name is %s, my age is: %s & my most favorite color is: %s!"
 with TimeIt(scope_name="std %", fd=sys.stderr):
     for _ in range(iterations):
-        std_logger.info(old_simple_fmt, p.name, p.age)
+        std_logger.info(old_simple_fmt, p.name, p.age, p.favorite_colors[0])
 
 # run test with std logging using .format() formatting
-simple_fmt = "Hey! my name is {p_name}, and my age is: {p_age}!"
+simple_fmt = "Hey! my name is {p_name}, my age is: {p_age} & my most favorite color is: {color}!"
 with TimeIt(scope_name="std .format()", fd=sys.stderr):
     for _ in range(iterations):
-        std_logger.info(simple_fmt.format(p_name=p.name, p_age=p.age))
+        std_logger.info(simple_fmt.format(p_name=p.name,
+                                          p_age=p.age,
+                                          color=p.favorite_colors[0]))
 
 # run test with uberlog using .format() formatting
 with TimeIt(scope_name="uber .format()", fd=sys.stderr):
     for _ in range(iterations):
-        uber_logger.info(simple_fmt, p_name=p.name, p_age=p.age)
+        uber_logger.info(simple_fmt, p_name=p.name,
+                         p_age=p.age,
+                         color=p.favorite_colors[0],
+                         extra=dict(single=p.single))
 
 # run test with uberlog using .format() formatting, with statement evaluation
-statement_fmt = "Hey! my name is {p.name}, and my age is: {p.age}!"
+statement_fmt = "Hey! my name is {p.name}, my age is: {p.age} & my most favorite color is: {p.favorite_colors[0]}!"
 with TimeIt(scope_name="uber .format() with statement", fd=sys.stderr):
     for _ in range(iterations):
-        uber_logger.info(statement_fmt)
+        uber_logger.info(statement_fmt, extra=dict(single=p.single))
