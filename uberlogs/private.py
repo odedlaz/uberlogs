@@ -56,9 +56,17 @@ class UberStringFormatter(StringFormatter):
 
 string_formatter = UberStringFormatter()
 
-compiled_log_msg_cache = LRUCache(capacity=15000)
-CompiledLogMessage = namedtuple(
-    'CompiledLogMessage', ['text', 'keywords', 'code'])
+compiled_log_msg_cache = LRUCache(capacity=100)
+
+
+class CompiledLogMessage(object):
+
+    def __init__(self, text, keywords, code):
+        self.cached = False
+        self.text = text
+        self.keywords = keywords
+        self.code = code
+
 valid_chars_transtable = str.maketrans("[].", "___")
 
 
@@ -71,6 +79,7 @@ def text_keywords(text, caller, log_args):
     log_msg = compiled_log_msg_cache.get(text)
 
     # we need to compile the message and add it to the cache
+
     if log_msg is None:
         keywords = [(kw, kw.translate(valid_chars_transtable)) for _, kw, _, _
                     in string_formatter.parse(text, silent=True)
@@ -90,8 +99,12 @@ def text_keywords(text, caller, log_args):
                                      code=compile("\n".join(code),
                                                   '<string>',
                                                   'exec'))
-        # cache it for later
         compiled_log_msg_cache[text] = log_msg
+    elif not log_msg.cached:
+        log_msg.cached = True
+        compiled_log_msg_cache.capacity += 1
+
+        # cache it for later
 
     # execute the compiled code in caller context
     exec(log_msg.code, caller.f_globals, caller.f_locals)
