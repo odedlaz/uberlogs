@@ -45,16 +45,15 @@ class ConcatFormatter(UberFormatter):
             if not self.parse_text:
                 include_keywords = True
 
-            parameters = {self.message_format.format(operator=self.operator,
+            parameters = (self.message_format.format(operator=self.operator,
                                                      *(key, val))
                           for key, val in six.iteritems(record.uber_extra)
-                          if include_keywords or key not in record.uber_kws}
+                          if include_keywords or key not in record.uber_kws)
 
-            if parameters:
-                paramstring = self.delimiter.join(sorted(parameters))
-                message = self.line_format.format(message=message,
-                                                  delimiter=self.delimiter,
-                                                  parameters=paramstring)
+            paramstring = self.delimiter.join(sorted(parameters))
+            message = self.line_format.format(message=message,
+                                              delimiter=self.delimiter,
+                                              parameters=paramstring)
 
         if self.color:
             color = self.log_color_map[record.levelno]
