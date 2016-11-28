@@ -62,6 +62,7 @@ with TimeIt(scope_name="std .format()", fd=sys.stderr):
                                           p_age=p.age,
                                           color=p.favorite_colors[0]))
 
+
 # run test with uberlog using .format() formatting
 with TimeIt(scope_name="uber .format()", fd=sys.stderr):
     for _ in range(iterations):
@@ -70,8 +71,26 @@ with TimeIt(scope_name="uber .format()", fd=sys.stderr):
                          color=p.favorite_colors[0],
                          extra=dict(single=p.single))
 
+# run test with uberlog using .format() formatting
+complex_fmt = "Hey! my name is {person.name}, my age is: {person.age} & my most favorite color is: {person.favorite_colors[0]}!"
+with TimeIt(scope_name="uber complex .format()", fd=sys.stderr):
+    for _ in range(iterations):
+        uber_logger.info(complex_fmt,
+                         person=p,
+                         extra=dict(single=p.single))
+
+
 # run test with uberlog using .format() formatting, with statement evaluation
-statement_fmt = "Hey! my name is {p.name}, my age is: {p.age} & my most favorite color is: {p.favorite_colors[0]}!"
+simple_statement_fmt = "Hey! my name is {p.name}, my age is: {p.age} & my most favorite color is: {p.favorite_colors[0]}!"
 with TimeIt(scope_name="uber .format() with statement", fd=sys.stderr):
     for _ in range(iterations):
-        uber_logger.info(statement_fmt, extra=dict(single=p.single))
+        uber_logger.info(simple_statement_fmt, extra=dict(single=p.single))
+
+
+# run test with uberlog using .format() formatting, with statement evaluation
+complex_statement_fmt = "Hey! my name is {p.name}, my age is: {p.age} & my most favorite color is: {person.favorite_colors[0]}!"
+with TimeIt(scope_name="uber complex .format() with statement", fd=sys.stderr):
+    for _ in range(iterations):
+        uber_logger.info(complex_statement_fmt,
+                         person=p,
+                         extra=dict(single=p.single))

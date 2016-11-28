@@ -9,6 +9,12 @@ from inspect import currentframe as currentframe
 from itertools import chain
 from six.moves import builtins
 from collections import namedtuple
+from string import _string
+
+
+def field_name_split(field_name):
+    field_name, _ = _string.formatter_field_name_split(field_name)
+    return field_name
 
 
 class LRUCache(object):
@@ -83,7 +89,7 @@ def text_keywords(text, caller, log_args):
     if log_msg is None:
         keywords = [(kw, kw.translate(valid_chars_transtable)) for _, kw, _, _
                     in string_formatter.parse(text, silent=True)
-                    if kw and kw not in log_args]
+                    if kw and field_name_split(kw) not in log_args]
 
         # create a valid log message (some characters aren't allowed)
         # and create the code that extracts keyword statements
