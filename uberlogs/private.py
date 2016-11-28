@@ -123,14 +123,14 @@ def log_message(logger, level, msg, args, exc_info=None, extra=None, **kwargs):
     msg, keywords = text_keywords(text=msg,
                                   caller=caller,
                                   log_args=extra)
-
     if keywords:
         extra = dict(keywords, **extra)
 
     try:
+        uber_kws = set(keywords).union(kwargs)
         return logging.Logger._log(logger, level, msg, args, exc_info,
                                    extra=dict(uber_extra=extra,
-                                              uber_kws=set(keywords),
+                                              uber_kws=uber_kws,
                                               **extra))
     finally:
         # why delete the frame?
