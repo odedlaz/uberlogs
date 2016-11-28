@@ -36,7 +36,12 @@ class ConcatFormatter(UberFormatter):
     @profile
     def _uber_message(self, record):
         # get the none formatted message (not getMessage())
-        message = str(record.msg)
+        # might be a class that represents a string,
+        # for example: StringifiableFromEvent in twisted
+        message = record.msg \
+            if isinstance(record.msg, six.string_types) \
+            else unicode(record.msg)
+
         if self.parse_text:
             message = message.format(**record.uber_extra)
 
