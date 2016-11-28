@@ -71,10 +71,10 @@ For example, the current version output on my computer is:
 $ ITERATIONS=10000 python profile.py 1> /dev/null
 Profiling 10000 iterations
 --------------------------
-took 0.66430 seconds to run [std %]
-took 0.66271 seconds to run [std .format()]
-took 0.96614 seconds to run [uber .format()]
-took 1.16048 seconds to run [uber .format() with statement]
+block took 0.55878 seconds to run [std %]
+block took 0.57047 seconds to run [std .format()]
+block took 0.78907 seconds to run [uber .format()]
+block took 0.73188 seconds to run [uber .format() with statement]
 ```
 
 I recommend using line_profiler to see profiling data. The code has all the needed attributes to make it work out of the box.

@@ -63,13 +63,8 @@ class ConcatFormatter(UberFormatter):
         return message
 
     def format(self, record):
-        # create a clone of the record,
-        # to make sure we don't change the original
-        uber_message = record.msg
-        if self.uber_record(record):
-            uber_message = self._uber_message(record)
+        record.uber_message = self._uber_message(record) \
+            if self.uber_record(record) \
+            else record.getMessage()
 
-        record.uber_message = uber_message
-
-        # call the original handler
         return super(ConcatFormatter, self).format(record)

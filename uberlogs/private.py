@@ -56,11 +56,10 @@ class UberStringFormatter(StringFormatter):
 
 string_formatter = UberStringFormatter()
 
-keyword_cache = LRUCache(capacity=15000)
-Keyword = namedtuple('Keyword', ['text', 'fnames'])
-
-
-transtable = str.maketrans("[].", "___")
+compiled_log_msg_cache = LRUCache(capacity=15000)
+CompiledLogMessage = namedtuple(
+    'CompiledLogMessage', ['text', 'keywords', 'code'])
+valid_chars_transtable = str.maketrans("[].", "___")
 
 
 @profile
@@ -69,25 +68,34 @@ def text_keywords(text, caller, log_args):
     extract keyword arguments from format text
     and evaluate them in caller scope.
     """
-    keyword = keyword_cache.get(text)
+    log_msg = compiled_log_msg_cache.get(text)
 
-    if keyword is None:
-        fnames = [(fname, fname.translate(transtable)) for _, fname, _, _
-                  in string_formatter.parse(text, silent=True)
-                  if fname and fname not in log_args]
+    # we need to compile the message and add it to the cache
+    if log_msg is None:
+        keywords = [(kw, kw.translate(valid_chars_transtable)) for _, kw, _, _
+                    in string_formatter.parse(text, silent=True)
+                    if kw and kw not in log_args]
 
+        # create a valid log message (some characters aren't allowed)
+        # and create the code that extracts keyword statements
         valid_text = text
-        for fname, valid_fname in fnames:
-            valid_text = valid_text.replace(fname, valid_fname)
+        code = ["uber_kw = {}"]
+        for kw, valid_kw in keywords:
+            code.append('uber_kw["{vfn}"] = {fn}'.format(vfn=valid_kw,
+                                                         fn=kw))
+            valid_text = valid_text.replace(kw, valid_kw)
 
-        keyword_cache[text] = keyword = Keyword(text=valid_text, fnames=fnames)
+        log_msg = CompiledLogMessage(text=valid_text,
+                                     keywords=keywords,
+                                     code=compile("\n".join(code),
+                                                  '<string>',
+                                                  'exec'))
+        # cache it for later
+        compiled_log_msg_cache[text] = log_msg
 
-    keywords = {valid_fname: eval(fname,
-                                  caller.f_globals,
-                                  caller.f_locals)
-                for fname, valid_fname in keyword.fnames}
-
-    return keyword.text, keywords
+    # execute the compiled code in caller context
+    exec(log_msg.code, caller.f_globals, caller.f_locals)
+    return log_msg.text, caller.f_locals.pop("uber_kw")
 
 
 @profile
@@ -108,7 +116,7 @@ def log_message(logger, level, msg, args, exc_info=None, extra=None, **kwargs):
     try:
         return logging.Logger._log(logger, level, msg, args, exc_info,
                                    extra=dict(uber_extra=extra,
-                                              uber_kws=list(keywords),
+                                              uber_kws=set(keywords),
                                               **extra))
     finally:
         # why delete the frame?
