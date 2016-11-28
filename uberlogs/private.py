@@ -118,8 +118,6 @@ def text_keywords(text, caller, log_args):
         log_msg.cached = True
         compiled_log_msg_cache.capacity += 1
 
-        # cache it for later
-
     # execute the compiled code in caller context
     exec(log_msg.code, caller.f_globals, caller.f_locals)
     return log_msg.text, caller.f_locals.pop("uber_kw")
