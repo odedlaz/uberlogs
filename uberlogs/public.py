@@ -32,7 +32,6 @@ def install(default_path='logging.json',
     if the path in the default_path or env_key doesn't exist,
     default level is used, and the root handler is set to the formattable stream handler
     """
-    from .handlers import KillProcessHandler
     from . import level
     import os
     import sys
@@ -45,15 +44,16 @@ def install(default_path='logging.json',
         logging.config.dictConfig(content)
     else:
         from .formatters import ConcatFormatter
-
-        logging.root.addHandler(StreamHandler(sys.stdout))
-        logging.root.setFormatter(ConcatFormatter())
-        logging.root.level = default_level
-        basicConfig(level=default_level)
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(ConcatFormatter())
+        logging.root.addHandler(handler)
+        logging.root.setLevel(default_level)
+        logging.basicConfig(level=default_level)
 
     # this handler is the last one, and will force exit
     # once a cirtical message has been recieved
     if kill_on is not None:
+        from .handlers import KillProcessHandler
         logging.root.addHandler(KillProcessHandler(level=kill_on))
 
     def log_unhandled(exctype, value, tb):
