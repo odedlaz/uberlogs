@@ -25,7 +25,7 @@ class JsonFormatter(SimpleJsonFormatter):
         if not self.parse_text:
             include_keywords = True
 
-        if not include_keywords:
+        if not include_keywords and record.uber_kws:
             arguments = {k: v for k, v in six.iteritems(arguments)
                          if k not in record.uber_kws}
 

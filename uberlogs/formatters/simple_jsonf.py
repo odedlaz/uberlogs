@@ -4,6 +4,14 @@ from .base import UberFormatter
 from logging import Formatter as LoggingFormatter
 
 
+MESSAGE = "message"
+LOGGER = "logger"
+LEVEL = "level"
+FILE = "file"
+FUNC = "func"
+EPOCH = "epoch"
+
+
 class SimpleJsonFormatter(UberFormatter):
 
     def __init__(self, indent=None, fmt=None, datefmt=None, **kwargs):
@@ -28,12 +36,14 @@ class SimpleJsonFormatter(UberFormatter):
 
     @profile
     def _get_message_obj(self, record):
-        msg_obj = dict(message=record.getMessage(),
-                       logger=record.name,
-                       level=record.levelname,
-                       file=record.pathname,
-                       func=record.funcName,
-                       epoch=floor(record.created))
+        msg_obj = {
+            MESSAGE: record.getMessage(),
+            LOGGER: record.name,
+            LEVEL: record.levelname,
+            FILE: record.pathname,
+            FUNC: record.funcName,
+            EPOCH: floor(record.created)
+        }
 
         if record.exc_info:
             fn = LoggingFormatter.formatException
