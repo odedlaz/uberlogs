@@ -121,27 +121,27 @@ def text_keywords(text, caller, log_args):
 
 @profile
 def log_message(logger, level, msg, args, exc_info=None, extra=None, **kwargs):
-    extra = dict(extra, **kwargs) if extra else kwargs
+    if extra:
+        kwargs.update(extra)
 
     frame = currentframe()
 
     # _log -> log_message -> profile
     caller = frame.f_back.f_back.f_back
 
+    # why delete the frame?
+    # VERSION: 2 or 3
+    # https://docs.python.org/VERSION/library/inspect.html#the-interpreter-stack
+    del frame
+
     msg, keywords = text_keywords(text=msg,
                                   caller=caller,
-                                  log_args=extra)
+                                  log_args=kwargs)
     if keywords:
-        extra = dict(keywords, **extra)
+        kwargs.update(keywords)
 
-    try:
-        uber_kws = set(keywords).union(kwargs)
-        return logging.Logger._log(logger, level, msg, args, exc_info,
-                                   extra=dict(uber_extra=extra,
-                                              uber_kws=uber_kws,
-                                              **extra))
-    finally:
-        # why delete the frame?
-        # VERSION: 2 or 3
-        # https://docs.python.org/VERSION/library/inspect.html#the-interpreter-stack
-        del frame
+    uber_kws = set(keywords).union(kwargs)
+    return logging.Logger._log(logger, level, msg, args, exc_info,
+                               extra=dict(uber_extra=kwargs,
+                                          uber_kws=uber_kws,
+                                          **kwargs))
