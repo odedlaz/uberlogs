@@ -25,7 +25,7 @@ class SimpleJsonFormatter(UberFormatter):
 
         super(SimpleJsonFormatter, self).__init__(fmt="%(uber_json)s",
                                                   **kwargs)
-        self.indent = indent
+        self.indent = indent or 0
 
     def formatException(self, exc_info):
         """
