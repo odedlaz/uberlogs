@@ -11,6 +11,12 @@ UberLogs does all the dumb work you have to do, to make your logs easy to parse:
 - Handler to violently kill the process when a log on a specific level has been written
 - Automatic twisted log rewriting to python.logging
 
+## Installation
+
+```bash
+$ pip install twine
+```
+
 ## Motivation
 
 I rarely use any other logging appenders than the console one. Most of the time I send my logs to a data cruncher and write horrible regular expressions to parse the data.
