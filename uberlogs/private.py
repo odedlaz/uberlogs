@@ -18,11 +18,6 @@ else:
     raise ImportError("Unknown python version")
 
 
-def field_name_split(field_name):
-    field_name, _ = formatter_field_name_split(field_name)
-    return field_name
-
-
 class LRUCache(object):
 
     def __init__(self, capacity):
@@ -96,7 +91,7 @@ def text_keywords(text, caller, log_args):
     if log_msg is None:
         keywords = [(kw, kw.translate(valid_chars_transtable)) for _, kw, _, _
                     in string_formatter.parse(text, silent=True)
-                    if kw and field_name_split(kw) not in log_args]
+                    if kw and formatter_field_name_split(kw)[0] not in log_args]
 
         # create a valid log message (some characters aren't allowed)
         # and create the code that extracts keyword statements

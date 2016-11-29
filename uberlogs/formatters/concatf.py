@@ -9,9 +9,9 @@ from .base import UberFormatter
 
 
 class ConcatFormatter(UberFormatter):
-    message_format = u"{0}{operator}{1}"
-    line_format = u"{message}{delimiter}{parameters}"
-    color_format = "{color}{text}\x1b[0m"
+    msg_fmt = u"{0}{operator}{1}"
+    line_fmt = u"{message}{delimiter}{parameters}"
+    color_fmt = "{color}{text}\x1b[0m"
     log_color_map = {
         level.DEBUG: '\x1b[32m',
         level.INFO: '\x1b[0m',
@@ -42,27 +42,23 @@ class ConcatFormatter(UberFormatter):
             if isinstance(record.msg, six.string_types) \
             else unicode(record.msg)
 
-        if self.parse_text:
-            message = message.format(**record.uber_extra)
-
         if record.uber_extra:
-            include_keywords = self.include_format_keywords
-            if not self.parse_text:
-                include_keywords = True
+            if self.parse_text:
+                message = message.format(**record.uber_extra)
 
-            parameters = (self.message_format.format(operator=self.operator,
-                                                     *(key, val))
-                          for key, val in six.iteritems(record.uber_extra)
-                          if include_keywords or key not in record.uber_kws)
+            params = [self.msg_fmt.format(operator=self.operator, *(key, val))
+                      for key, val in six.iteritems(record.uber_extra)
+                      if self.include_keywords or key not in record.uber_kws]
 
-            paramstring = self.delimiter.join(sorted(parameters))
-            message = self.line_format.format(message=message,
-                                              delimiter=self.delimiter,
-                                              parameters=paramstring)
+            if params:
+                paramstring = self.delimiter.join(params)
+                message = self.line_fmt.format(message=message,
+                                               delimiter=self.delimiter,
+                                               parameters=paramstring)
 
         if self.color:
             color = self.log_color_map[record.levelno]
-            message = self.color_format.format(color=color, text=message)
+            message = self.color_fmt.format(color=color, text=message)
 
         return message
 
