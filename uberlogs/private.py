@@ -2,7 +2,6 @@ import six
 import ujson as json
 import logging
 import logging.config
-from recordclass import recordclass
 from string import Formatter as StringFormatter
 from datetime import datetime, tzinfo, timedelta
 from inspect import currentframe as currentframe
@@ -71,10 +70,15 @@ string_formatter = UberStringFormatter()
 
 compiled_log_msg_cache = LRUCache(capacity=100)
 
-CompiledLogMessage = recordclass('CompiledLogMessage', ['cached',
-                                                        'text',
-                                                        'keywords',
-                                                        'code'])
+
+class CompiledLogMessage(object):
+    __slots__ = ["text", "keywords", "code", "cached"]
+
+    def __init__(self, text, keywords, code):
+        self.text = text
+        self.keywords = keywords
+        self.code = code
+        self.cached = False
 
 valid_chars_transtable = maketrans("[].", "___")
 
@@ -105,7 +109,6 @@ def text_keywords(text, caller, log_args):
 
         log_msg = CompiledLogMessage(text=valid_text,
                                      keywords=keywords,
-                                     cached=False,
                                      code=compile("\n".join(code),
                                                   '<string>',
                                                   'exec'))
