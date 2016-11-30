@@ -1,20 +1,21 @@
+import pytz
 import ujson as json
 from math import floor
+from datetime import datetime
 from .base import UberFormatter
 from logging import Formatter as LoggingFormatter
-
 
 MESSAGE = "message"
 LOGGER = "logger"
 LEVEL = "level"
 FILE = "file"
 FUNC = "func"
-EPOCH = "epoch"
+TIME = "time"
 
 
 class SimpleJsonFormatter(UberFormatter):
 
-    def __init__(self, indent=None, fmt=None, datefmt=None, **kwargs):
+    def __init__(self, indent=None, fmt=None, datefmt=None, epoch_time=False, **kwargs):
         """
         Initialize the handler.
         If stream is not specified, sys.stderr is used.
@@ -26,6 +27,7 @@ class SimpleJsonFormatter(UberFormatter):
         super(SimpleJsonFormatter, self).__init__(fmt="%(uber_json)s",
                                                   **kwargs)
         self.indent = indent or 0
+        self.epoch = epoch_time
 
     def formatException(self, exc_info):
         """
@@ -36,13 +38,18 @@ class SimpleJsonFormatter(UberFormatter):
 
     @profile
     def _get_message_obj(self, record):
+        time = floor(record.created)
+        if not self.epoch:
+            dt = datetime.utcfromtimestamp(record.created)
+            time = dt.replace(tzinfo=pytz.utc,
+                              microsecond=0).isoformat()
         msg_obj = {
             MESSAGE: record.getMessage(),
             LOGGER: record.name,
             LEVEL: record.levelname,
             FILE: record.pathname,
             FUNC: record.funcName,
-            EPOCH: floor(record.created)
+            TIME: time
         }
 
         if record.exc_info:
