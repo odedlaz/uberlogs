@@ -14,7 +14,7 @@ UberLogs does all the dumb work you have to do, to make your logs easy to parse:
 ## Installation
 
 ```bash
-$ pip install twine
+$ pip install uberlogs
 ```
 
 ## Motivation
@@ -75,12 +75,14 @@ For example, the current version output on my computer is:
 
 ```bash
 $ ITERATIONS=10000 python profile.py 1> /dev/null
-Profiling 10000 iterations
---------------------------
-block took 0.55878 seconds to run [std %]
-block took 0.57047 seconds to run [std .format()]
-block took 0.78907 seconds to run [uber .format()]
-block took 0.73188 seconds to run [uber .format() with statement]
+Profiling 10000 iterations [python 3.5.2]
+-----------------------------------------
+block took 0.666 seconds, 0.00% faster than 'std %' [std %]
+block took 0.655 seconds, 0.02% faster than 'std %' [std .format()]
+block took 0.851 seconds, 0.30% slower than 'std .format()' [uber .format()]
+block took 0.863 seconds, 0.01% slower than 'uber .format()' [uber complex .format()]
+block took 0.842 seconds, 0.28% slower than 'std .format()' [uber .format() with statement]
+block took 0.881 seconds, 0.05% slower than 'uber .format() with statement' [uber complex .format() with statement]
 ```
 
 I recommend using line_profiler to see profiling data. The code has all the needed attributes to make it work out of the box.
