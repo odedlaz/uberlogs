@@ -3,6 +3,7 @@ import ujson as json
 from logging import Formatter as LoggingFormatter
 from logging import LogRecord
 from datetime import datetime, tzinfo, timedelta
+from inspect import currentframe as currentframe
 
 from .. import level
 from .base import UberFormatter
@@ -41,7 +42,6 @@ class ConcatFormatter(UberFormatter):
         message = record.msg \
             if isinstance(record.msg, six.string_types) \
             else unicode(record.msg)
-
         if record.uber_extra:
             if self.parse_text:
                 message = message.format(**record.uber_extra)
@@ -55,16 +55,32 @@ class ConcatFormatter(UberFormatter):
                 message = self.line_fmt.format(message=message,
                                                delimiter=self.delimiter,
                                                parameters=paramstring)
-
-        if self.color:
-            color = self.log_color_map[record.levelno]
-            message = self.color_fmt.format(color=color, text=message)
-
         return message
 
+    def colorize(self, text, log_level):
+        color = self.log_color_map[log_level]
+        return self.color_fmt.format(color=color, text=text)
+
+    def formatException(self, exc_info):
+        exc_text = super(ConcatFormatter, self).formatException(exc_info)
+        if self.color:
+            frame = currentframe()
+            levelno = frame.f_back.f_locals["record"].levelno
+            # why delete the frame?
+            # VERSION: 2 or 3
+            # https://docs.python.org/VERSION/library/inspect.html#the-interpreter-stack
+            del frame
+            exc_text = self.colorize(text=exc_text, log_level=levelno)
+        return exc_text
+
     def format(self, record):
-        record.uber_message = self._uber_message(record) \
+        message = self._uber_message(record) \
             if self.uber_record(record) \
             else record.getMessage()
+
+        if self.color:
+            message = self.colorize(text=message, log_level=record.levelno)
+
+        record.uber_message = message
 
         return super(ConcatFormatter, self).format(record)
