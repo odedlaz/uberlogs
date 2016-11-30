@@ -119,8 +119,9 @@ def text_keywords(text, caller, log_args):
 
 @profile
 def log_message(logger, level, msg, args, exc_info=None, extra=None, **kwargs):
-    if extra:
-        kwargs.update(extra)
+    extra = extra or {}
+    if kwargs:
+        extra.update(kwargs)
 
     frame = currentframe()
 
@@ -134,12 +135,11 @@ def log_message(logger, level, msg, args, exc_info=None, extra=None, **kwargs):
 
     msg, keywords = text_keywords(text=msg,
                                   caller=caller,
-                                  log_args=kwargs)
+                                  log_args=extra)
     if keywords:
-        kwargs.update(keywords)
-
+        extra.update(keywords)
     uber_kws = set(keywords).union(kwargs)
     return logging.Logger._log(logger, level, msg, args, exc_info,
-                               extra=dict(uber_extra=kwargs,
+                               extra=dict(uber_extra=extra,
                                           uber_kws=uber_kws,
-                                          **kwargs))
+                                          **extra))
