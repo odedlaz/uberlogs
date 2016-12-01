@@ -67,12 +67,16 @@ compiled_log_msg_cache = LRUCache(capacity=100)
 
 
 class CompiledLogMessage(object):
-    __slots__ = ["text", "keywords", "not_keywords", "code", "cached"]
+    __slots__ = ["text",
+                 "keyword_keys",
+                 "arguments",
+                 "code",
+                 "cached"]
 
-    def __init__(self, text, keywords, not_keywords, code):
+    def __init__(self, text, keywords, arguments, code):
         self.text = text
-        self.keywords = keywords
-        self.not_keywords = not_keywords
+        self.arguments = arguments
+        self.keyword_keys = set(six.itervalues(keywords)).union(arguments)
         self.code = code
         self.cached = False
 
@@ -94,22 +98,22 @@ def text_keywords(text, caller, log_args):
         raw_keywords = {formatter_field_name_split(kw)[0] for _, kw, _, _
                         in string_formatter.parse(text, silent=True) if kw}
 
-        keywords = {(kw, kw.translate(valid_chars_transtable)) for kw
+        keywords = {kw: kw.translate(valid_chars_transtable) for kw
                     in raw_keywords if kw not in log_args}
 
-        not_keywords = {k for k in six.iterkeys(log_args) if k in raw_keywords}
+        arguments = {k for k in six.iterkeys(log_args) if k in raw_keywords}
         # create a valid log message (some characters aren't allowed)
         # and create the code that extracts keyword statements
         valid_text = text
         code = ["uber_kw = {}"]
-        for kw, valid_kw in keywords:
+        for kw, valid_kw in six.iteritems(keywords):
             code.append('uber_kw["{vfn}"] = {fn}'.format(vfn=valid_kw,
                                                          fn=kw))
             valid_text = valid_text.replace(kw, valid_kw)
 
         log_msg = CompiledLogMessage(text=valid_text,
                                      keywords=keywords,
-                                     not_keywords=not_keywords,
+                                     arguments=arguments,
                                      code=compile("\n".join(code),
                                                   '<string>',
                                                   'exec'))
@@ -120,7 +124,7 @@ def text_keywords(text, caller, log_args):
 
     # execute the compiled code in caller context
     exec(log_msg.code, caller.f_globals, caller.f_locals)
-    return log_msg.text, caller.f_locals.pop("uber_kw"), log_msg.not_keywords
+    return log_msg.text, log_msg.keyword_keys, caller.f_locals.pop("uber_kw")
 
 
 @profile
@@ -139,14 +143,13 @@ def log_message(logger, level, msg, args, exc_info=None, extra=None, **kwargs):
     # https://docs.python.org/VERSION/library/inspect.html#the-interpreter-stack
     del frame
 
-    msg, keywords, not_keywords = text_keywords(text=msg,
+    msg, keyword_keys, keywords = text_keywords(text=msg,
                                                 caller=caller,
                                                 log_args=extra)
     if keywords:
         extra.update(keywords)
 
-    uber_kws = set(keywords).union(not_keywords)
     return logging.Logger._log(logger, level, msg, args, exc_info,
                                extra=dict(uber_extra=extra,
-                                          uber_kws=uber_kws,
+                                          uber_kws=keyword_keys,
                                           **extra))
