@@ -59,8 +59,7 @@ eatable = Eatable(name="bagel",
                   flavor="salty",
                   location="tel-aviv")
 
-logger.info("I'm eating a {eatable.name}", extra=dict(flavor=eatable.flavor,
-                                                      location=eatable.location))
+logger.info("I'm eating a {eatable.name}", flavor=eatable.flavor,location=eatable.location)
 
 # 1970-1-1 18:26:17,578 - test - INFO - I'm eating a bagel; flavor: salty; location: tel-aviv
 ```
