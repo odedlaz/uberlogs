@@ -67,11 +67,12 @@ compiled_log_msg_cache = LRUCache(capacity=100)
 
 
 class CompiledLogMessage(object):
-    __slots__ = ["text", "keywords", "code", "cached"]
+    __slots__ = ["text", "keywords", "not_keywords", "code", "cached"]
 
-    def __init__(self, text, keywords, code):
+    def __init__(self, text, keywords, not_keywords, code):
         self.text = text
         self.keywords = keywords
+        self.not_keywords = not_keywords
         self.code = code
         self.cached = False
 
@@ -89,10 +90,14 @@ def text_keywords(text, caller, log_args):
     # we need to compile the message and add it to the cache
 
     if log_msg is None:
-        keywords = [(kw, kw.translate(valid_chars_transtable)) for _, kw, _, _
-                    in string_formatter.parse(text, silent=True)
-                    if kw and formatter_field_name_split(kw)[0] not in log_args]
 
+        raw_keywords = {formatter_field_name_split(kw)[0] for _, kw, _, _
+                        in string_formatter.parse(text, silent=True) if kw}
+
+        keywords = {(kw, kw.translate(valid_chars_transtable)) for kw
+                    in raw_keywords if kw not in log_args}
+
+        not_keywords = {k for k in six.iterkeys(log_args) if k in raw_keywords}
         # create a valid log message (some characters aren't allowed)
         # and create the code that extracts keyword statements
         valid_text = text
@@ -104,6 +109,7 @@ def text_keywords(text, caller, log_args):
 
         log_msg = CompiledLogMessage(text=valid_text,
                                      keywords=keywords,
+                                     not_keywords=not_keywords,
                                      code=compile("\n".join(code),
                                                   '<string>',
                                                   'exec'))
@@ -114,7 +120,7 @@ def text_keywords(text, caller, log_args):
 
     # execute the compiled code in caller context
     exec(log_msg.code, caller.f_globals, caller.f_locals)
-    return log_msg.text, caller.f_locals.pop("uber_kw")
+    return log_msg.text, caller.f_locals.pop("uber_kw"), log_msg.not_keywords
 
 
 @profile
@@ -133,12 +139,13 @@ def log_message(logger, level, msg, args, exc_info=None, extra=None, **kwargs):
     # https://docs.python.org/VERSION/library/inspect.html#the-interpreter-stack
     del frame
 
-    msg, keywords = text_keywords(text=msg,
-                                  caller=caller,
-                                  log_args=extra)
+    msg, keywords, not_keywords = text_keywords(text=msg,
+                                                caller=caller,
+                                                log_args=extra)
     if keywords:
         extra.update(keywords)
-    uber_kws = set(keywords).union(kwargs)
+
+    uber_kws = set(keywords).union(not_keywords)
     return logging.Logger._log(logger, level, msg, args, exc_info,
                                extra=dict(uber_extra=extra,
                                           uber_kws=uber_kws,
