@@ -56,45 +56,45 @@ persistent_cache = {}
 temporary_cache = ConfinedDictionary(max_items=100)
 
 
-class CompiledLogMessage(object):
+class UberLogRecord(object):
     __slots__ = ["text",
                  "keyword_keys",
                  "code"]
 
-    def __init__(self, text, keywords, arguments, code):
+    @classmethod
+    def compile(cls, text, args):
+        """
+        create a UberLogRecord instance of the given text and args
+        """
+        raw_keywords = {formatter_field_name_split(kw)[0] for _, kw, _, _
+                        in string_formatter.parse(text, silent=True) if kw}
+
+        keywords = {kw: kw.translate(valid_chars_transtable) for kw
+                    in raw_keywords if kw not in args}
+
+        arguments = {k for k in six.iterkeys(args) if k in raw_keywords}
+        # create a valid log message (some characters aren't allowed)
+        # and create the code that extracts keyword statements
+        valid_text = text
+        code = ["uber_kw = {}"]
+        for kw, valid_kw in six.iteritems(keywords):
+            code.append('uber_kw["{vfn}"] = {fn}'.format(vfn=valid_kw,
+                                                         fn=kw))
+            valid_text = valid_text.replace(kw, valid_kw)
+
+        keyword_keys = set(six.itervalues(keywords)).union(arguments)
+        return cls(text=valid_text,
+                   keyword_keys=keyword_keys,
+                   code=compile("\n".join(code),
+                                '<string>',
+                                'exec'))
+
+    def __init__(self, text, keyword_keys, code):
         self.text = text
-        self.keyword_keys = set(six.itervalues(keywords)).union(arguments)
+        self.keyword_keys = keyword_keys
         self.code = code
 
 valid_chars_transtable = maketrans("[].", "___")
-
-
-def cached_log_message(text, args):
-    """
-    create a CompiledLogMessage instance of the given text and args
-    """
-    raw_keywords = {formatter_field_name_split(kw)[0] for _, kw, _, _
-                    in string_formatter.parse(text, silent=True) if kw}
-
-    keywords = {kw: kw.translate(valid_chars_transtable) for kw
-                in raw_keywords if kw not in args}
-
-    arguments = {k for k in six.iterkeys(args) if k in raw_keywords}
-    # create a valid log message (some characters aren't allowed)
-    # and create the code that extracts keyword statements
-    valid_text = text
-    code = ["uber_kw = {}"]
-    for kw, valid_kw in six.iteritems(keywords):
-        code.append('uber_kw["{vfn}"] = {fn}'.format(vfn=valid_kw,
-                                                     fn=kw))
-        valid_text = valid_text.replace(kw, valid_kw)
-
-    return CompiledLogMessage(text=valid_text,
-                              keywords=keywords,
-                              arguments=arguments,
-                              code=compile("\n".join(code),
-                                           '<string>',
-                                           'exec'))
 
 
 @profile
@@ -118,7 +118,7 @@ def text_keywords(text, caller, log_args):
         cache = persistent_cache
         if log_msg is None:
             cache = temporary_cache
-            log_msg = cached_log_message(text, log_args)
+            log_msg = UberLogRecord.compile(text, log_args)
 
         cache[text] = log_msg
 
