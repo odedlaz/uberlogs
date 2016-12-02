@@ -18,34 +18,22 @@ else:
     raise ImportError("Unknown python version")
 
 
-class LRUCache(object):
+class ConfinedDictionary(dict):
 
-    def __init__(self, capacity):
-        from collections import OrderedDict
-        self.capacity = capacity
-        self.cache = OrderedDict()
+    def __init__(self, max_items=None, **kwargs):
+        if max_items is not None and not isinstance(max_items, int):
+            raise ValueError("max items has to be an integer")
 
-    def get(self, key):
-        value = self.cache.get(key)
-        if value is not None:
-            # update the order
-            self.cache[key] = value
-        return value
+        if max_items <= 0:
+            raise ValueError("max items has to be at least 1")
 
-    def __getitem__(self, key):
-        return self.get(key)
-
-    def set(self, key, value):
-
-        if key not in self.cache:
-            # before adding a new item, we update the lru cahce
-            if len(self.cache) >= self.capacity:
-                self.cache.popitem(last=False)
-
-        self.cache[key] = value
+        self.max_items = max_items
+        super(ConfinedDictionary, self).__init__(**kwargs)
 
     def __setitem__(self, key, value):
-        return self.set(key, value)
+        if self.max_items is not None and len(self) >= self.max_items:
+            self.popitem()
+        return super(ConfinedDictionary, self).__setitem__(key, value)
 
 
 class UberStringFormatter(StringFormatter):
@@ -63,24 +51,50 @@ class UberStringFormatter(StringFormatter):
 
 string_formatter = UberStringFormatter()
 
-compiled_log_msg_cache = LRUCache(capacity=100)
+
+persistent_cache = {}
+temporary_cache = ConfinedDictionary(max_items=100)
 
 
 class CompiledLogMessage(object):
     __slots__ = ["text",
                  "keyword_keys",
-                 "arguments",
-                 "code",
-                 "cached"]
+                 "code"]
 
     def __init__(self, text, keywords, arguments, code):
         self.text = text
-        self.arguments = arguments
         self.keyword_keys = set(six.itervalues(keywords)).union(arguments)
         self.code = code
-        self.cached = False
 
 valid_chars_transtable = maketrans("[].", "___")
+
+
+def cached_log_message(text, args):
+    """
+    create a CompiledLogMessage instance of the given text and args
+    """
+    raw_keywords = {formatter_field_name_split(kw)[0] for _, kw, _, _
+                    in string_formatter.parse(text, silent=True) if kw}
+
+    keywords = {kw: kw.translate(valid_chars_transtable) for kw
+                in raw_keywords if kw not in args}
+
+    arguments = {k for k in six.iterkeys(args) if k in raw_keywords}
+    # create a valid log message (some characters aren't allowed)
+    # and create the code that extracts keyword statements
+    valid_text = text
+    code = ["uber_kw = {}"]
+    for kw, valid_kw in six.iteritems(keywords):
+        code.append('uber_kw["{vfn}"] = {fn}'.format(vfn=valid_kw,
+                                                     fn=kw))
+        valid_text = valid_text.replace(kw, valid_kw)
+
+    return CompiledLogMessage(text=valid_text,
+                              keywords=keywords,
+                              arguments=arguments,
+                              code=compile("\n".join(code),
+                                           '<string>',
+                                           'exec'))
 
 
 @profile
@@ -89,41 +103,28 @@ def text_keywords(text, caller, log_args):
     extract keyword arguments from format text
     and evaluate them in caller scope.
     """
-    log_msg = compiled_log_msg_cache.get(text)
 
-    # we need to compile the message and add it to the cache
+    # Try to get the log message from the persistent cache
+    # if it's not there -> try the temporary_cache
+    # 1. If it's in the temporary cache - move to persistent cache
+    # 2. Otherwise, Compile the log and cache it in the temporary cache
+    # The idea behind these two caches is that logs might be written once
+    # and we don't want to cache them forever.
 
+    log_msg = persistent_cache.get(text)
     if log_msg is None:
+        log_msg = temporary_cache.pop(text, None)
 
-        raw_keywords = {formatter_field_name_split(kw)[0] for _, kw, _, _
-                        in string_formatter.parse(text, silent=True) if kw}
+        cache = persistent_cache
+        if log_msg is None:
+            cache = temporary_cache
+            log_msg = cached_log_message(text, log_args)
 
-        keywords = {kw: kw.translate(valid_chars_transtable) for kw
-                    in raw_keywords if kw not in log_args}
-
-        arguments = {k for k in six.iterkeys(log_args) if k in raw_keywords}
-        # create a valid log message (some characters aren't allowed)
-        # and create the code that extracts keyword statements
-        valid_text = text
-        code = ["uber_kw = {}"]
-        for kw, valid_kw in six.iteritems(keywords):
-            code.append('uber_kw["{vfn}"] = {fn}'.format(vfn=valid_kw,
-                                                         fn=kw))
-            valid_text = valid_text.replace(kw, valid_kw)
-
-        log_msg = CompiledLogMessage(text=valid_text,
-                                     keywords=keywords,
-                                     arguments=arguments,
-                                     code=compile("\n".join(code),
-                                                  '<string>',
-                                                  'exec'))
-        compiled_log_msg_cache[text] = log_msg
-    elif not log_msg.cached:
-        log_msg.cached = True
-        compiled_log_msg_cache.capacity += 1
+        cache[text] = log_msg
 
     # execute the compiled code in caller context
     exec(log_msg.code, caller.f_globals, caller.f_locals)
+
     return log_msg.text, log_msg.keyword_keys, caller.f_locals.pop("uber_kw")
 
 
