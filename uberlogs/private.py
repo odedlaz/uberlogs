@@ -18,7 +18,7 @@ else:
     raise ImportError("Unknown python version")
 
 
-class ConfinedDictionary(dict):
+class BoundedDictionary(dict):
 
     def __init__(self, max_items=None, **kwargs):
         if max_items is not None and not isinstance(max_items, int):
@@ -28,12 +28,12 @@ class ConfinedDictionary(dict):
             raise ValueError("max items has to be at least 1")
 
         self.max_items = max_items
-        super(ConfinedDictionary, self).__init__(**kwargs)
+        super(BoundedDictionary, self).__init__(**kwargs)
 
     def __setitem__(self, key, value):
         if self.max_items is not None and len(self) >= self.max_items:
             self.popitem()
-        return super(ConfinedDictionary, self).__setitem__(key, value)
+        return super(BoundedDictionary, self).__setitem__(key, value)
 
 
 class UberStringFormatter(StringFormatter):
@@ -53,7 +53,7 @@ string_formatter = UberStringFormatter()
 
 
 persistent_cache = {}
-temporary_cache = ConfinedDictionary(max_items=100)
+temporary_cache = BoundedDictionary(max_items=100)
 
 
 class UberLogRecord(object):
