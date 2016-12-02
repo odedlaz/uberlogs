@@ -1,1 +1,1 @@
-include logging.json LICENSE tox.ini requirements*.txt
+include logging.json LICENSE tox.ini requirements*.txt VERSION

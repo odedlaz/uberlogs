@@ -4,11 +4,13 @@ import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 from pip.req import parse_requirements
-from uberlogs import __version__
 
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
-requirements = parse_requirements("requirements.txt", session=False)
-test_requirements = parse_requirements("requirements-test.txt", session=False)
+requirements = list(parse_requirements("requirements.txt",
+                                       session=False))
+
+test_requirements = list(parse_requirements("requirements-test.txt",
+                                            session=False))
 
 
 class PyTest(TestCommand):
@@ -31,7 +33,7 @@ class PyTest(TestCommand):
 
 setup(
     name='uberlogs',
-    version=__version__,
+    version=open("VERSION").read(),
     url='http://github.com/odedlaz/uberlogs',
     license='MIT License',
     author='Oded Lazar',
