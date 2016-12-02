@@ -42,11 +42,11 @@ class TimeIt(object):
         diff = 1 - (now / self.scope_times[self._compare_to])
         adj = "faster" if diff >= 0 else "slower"
 
-        color = 'red'
-        if 0 < diff < 1:
-            color = 'green'
+        color = 'green'
         if -0.1 < diff < 0:
             color = 'yellow'
+        elif diff < 0:
+            color = 'red'
 
         percent = "{color}{diff:.2f}%\x1b[0m".format(color=color_map[color],
                                                      diff=abs(diff))
