@@ -1,0 +1,17 @@
+language: python
+
+install:
+    - pip install --upgrade pip
+    - pip install --no-binary pycparser
+    - pip install tox-travis coveralls
+
+python:
+    - "2.7"
+    - "3.5"
+
+script:
+    - tox
+
+after_success:
+    - coverage report
+    - coveralls

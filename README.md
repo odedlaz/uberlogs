@@ -1,5 +1,7 @@
 # UberLogs
 
+[![Build Status](https://travis-ci.org/odedlaz/uberlogs.svg?branch=master)](https://travis-ci.org/odedlaz/uberlogs) [![Coverage Status](https://coveralls.io/repos/github/odedlaz/uberlogs/badge.svg?branch=travis)](https://coveralls.io/github/odedlaz/uberlogs?branch=master)
+
 Writing good, usable logs is not an easy task. Why work hard when you can use UberLogs?
 
 UberLogs does all the dumb work you have to do, to make your logs easy to parse:
