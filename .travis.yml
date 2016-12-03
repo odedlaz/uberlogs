@@ -1,17 +1,27 @@
 language: python
 
 install:
-    - pip install --upgrade pip
-    - pip install --no-binary pycparser
-    - pip install tox-travis coveralls
+  - pip install --upgrade pip
+  - pip install --no-binary pycparser
+  - pip install tox-travis coveralls
 
 python:
-    - "2.7"
-    - "3.5"
+  - "2.7"
+  - "3.5"
 
 script:
-    - tox
+  - tox
 
 after_success:
-    - coverage report
-    - coveralls
+  - coverage report
+  - coveralls
+
+deploy:
+  provider: pypi
+  user: odedlaz
+  password:
+    secure: g5fDz+lC9Q1Iyxe0sP+PCE1/lPnq8tN8/ZkNFLePDlakoHG7siSViycZJzIfqvm68ielBfOAjORGA+B//zyfM0+QfB8qKUoX+RP/ja6DfAnQYjIqCw5G8UQxS6YTNo4exxC7M4dFNcM4GH61kkXt1O3nX7jNvIinAwJqWaXosuyYSJf5x4T1KR8eqYoKzIji92QS8AyFwX+hMuGmjIE3LYueHJDZi/ti7JQnTM3xaiEu/ldoC81wzy5YJo+zbDmmJiICMHuwZC9oijTMxBh1K/od/p7JRU/Jo2XHuere3IskN8W7PxUFLRaECbAeCHulg4AslPUHWn7x8at3JAIMhiw15JmNpv9AVGmE9sZwEa5BdKiJ5FXrp7SlpPfJgxyzNtnLljk06fuSBobtWnJmhT/1DusRXuWo/ASKpa9Jg3GHdmapYEm3IaS3NFeNZaULVw2iQ2uC55dLYy77wonZhHFEYIoTx0oB4W0Hp7GpkKz2QEfJjiDEeKoVYebY6LaKha//gqB/bbI5aKlIyuzuN53u9ZwBPDTzLrPCWJhvnqLo/jdAGrTLS62XPd2AAWDMLmyve3Odmw5sqGOf6CEl2TclAoNjaiSVh5fopis7kGKwFPLaD/4yKBv1FL8LCn6siB6CYueG57lIlRDCqH0HRylc+KLHikGiWq4pz/XSMNM=
+  on:
+    tags: true
+    distributions: sdist bdist_wheel
+    repo: odedlaz/uberlogs
