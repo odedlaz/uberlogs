@@ -62,7 +62,7 @@ class UberLogRecord(object):
                  "keyword_keys",
                  "code"]
 
-    reserved_varnames = set(logging.Logger._log.__code__.co_varnames)
+    reserved_varnames = {"level", "msg", "args", "exc_info"}
 
     @classmethod
     def compile(cls, text, args):
