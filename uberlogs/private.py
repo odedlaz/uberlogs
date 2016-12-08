@@ -7,6 +7,7 @@ from datetime import datetime, tzinfo, timedelta
 from inspect import currentframe as currentframe
 from itertools import chain
 from six.moves import builtins
+from random import choice
 
 if six.PY3:
     from _string import formatter_field_name_split
@@ -61,6 +62,8 @@ class UberLogRecord(object):
                  "keyword_keys",
                  "code"]
 
+    reserved_varnames = set(logging.Logger._log.__code__.co_varnames)
+
     @classmethod
     def compile(cls, text, args):
         """
@@ -83,6 +86,21 @@ class UberLogRecord(object):
             valid_text = valid_text.replace(kw, valid_kw)
 
         keyword_keys = set(six.itervalues(keywords)).union(arguments)
+
+        # check if the varnames used for logging are reserved.
+        # That can be the case if either:
+        # 1. parsed keywords contain reserved varnames
+        # 2. kwargs contain reserved varnames
+        # 3. extra contains reserved varnames
+
+        varnames = keyword_keys.union(args.keys())
+        used_reserved_names = cls.reserved_varnames.intersection(varnames)
+        if used_reserved_names:
+            random_reserved_name = choice(list(used_reserved_names))
+            m = "{fn}() got multiple values for keyword argument: '{reserved}'"
+            raise TypeError(m.format(fn="log_message",
+                                     reserved=random_reserved_name))
+
         return cls(text=valid_text,
                    keyword_keys=keyword_keys,
                    code=compile("\n".join(code),
@@ -149,7 +167,6 @@ def log_message(logger, level, msg, args, exc_info=None, extra=None, **kwargs):
                                                 log_args=extra)
     if keywords:
         extra.update(keywords)
-
     return logging.Logger._log(logger, level, msg, args, exc_info,
                                extra=dict(uber_extra=extra,
                                           uber_kws=keyword_keys,
