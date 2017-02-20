@@ -1,5 +1,3 @@
-
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -25,6 +23,7 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+.direnv
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -83,6 +82,7 @@ celerybeat-schedule
 # virtualenv
 venv/
 ENV/
+.direnv
 
 # Spyder project settings
 .spyderproject
