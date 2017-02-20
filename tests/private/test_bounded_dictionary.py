@@ -3,23 +3,23 @@ import six
 from ddt import ddt, data
 from unittest import TestCase
 
-from uberlogs.private import BoundedDictionary
+from uberlogs.private import LRUCache
 
 
 @ddt
-class BoundedDictionaryTests(TestCase):
+class LRUCacheTests(TestCase):
 
     def test_value_error_raise_on_non_integer_max_items(self):
         with self.assertRaises(ValueError):
-            BoundedDictionary("a-non-int-value")
+            LRUCache("a-non-int-value")
 
     @data(0, -1)
     def test_value_error_raise_on_non_positive_max_items(self, max_items):
         with self.assertRaises(ValueError):
-            BoundedDictionary(max_items)
+            LRUCache(max_items)
 
     def test_resize_on_max_items(self):
-        cd = BoundedDictionary(max_items=1, test_key="test")
+        cd = LRUCache(max_items=1, test_key="test")
         self.assertEqual(len(cd), 1)
 
         cd["another_test_key"] = "another_test"
@@ -28,7 +28,7 @@ class BoundedDictionaryTests(TestCase):
         self.assertNotIn("test_key", cd)
 
     def test_no_resize_when_max_items_not_reached(self):
-        cd = BoundedDictionary(max_items=2)
+        cd = LRUCache(max_items=2)
         cd["a"] = "test-a"
         self.assertEqual(len(cd), 1)
 
