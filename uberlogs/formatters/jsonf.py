@@ -5,7 +5,6 @@ from .simple_jsonf import SimpleJsonFormatter
 
 class JsonFormatter(SimpleJsonFormatter):
 
-    @profile
     def _get_message_obj(self, record):
         msg_obj = super(JsonFormatter, self)._get_message_obj(record)
 

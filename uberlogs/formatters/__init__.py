@@ -1,3 +1,4 @@
-from .concatf import ConcatFormatter
-from .jsonf import JsonFormatter
-from .simple_jsonf import SimpleJsonFormatter
+# NOQA -> silence flake8 warnings
+from .concatf import ConcatFormatter  # NOQA
+from .jsonf import JsonFormatter  # NOQA
+from .simple_jsonf import SimpleJsonFormatter  # NOQA
