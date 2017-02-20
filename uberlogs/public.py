@@ -1,8 +1,7 @@
 import logging
 import logging.config
 from functools import partial
-from .private import (text_keywords,
-                      log_message)
+from .private import log_message
 
 
 try:
@@ -22,7 +21,6 @@ def getLogger(name):
     return logger
 
 
-@profile
 def install(default_path='logging.json',
             default_level=logging.INFO,
             env_key='LOG_CFG',
@@ -30,9 +28,9 @@ def install(default_path='logging.json',
     """
     Setup logging configuration
     if the path in the default_path or env_key doesn't exist,
-    default level is used, and the root handler is set to the formattable stream handler
+    default level is used,
+    and the root handler is set to the formattable stream handler
     """
-    from . import level
     import os
     import sys
 
@@ -45,7 +43,8 @@ def install(default_path='logging.json',
     else:
         from .formatters import ConcatFormatter
         handler = logging.StreamHandler(sys.stdout)
-        concatf = ConcatFormatter(fmt="%(asctime)s - %(name)s - %(levelname)s - %(uber_message)s",
+        fmt = "%(asctime)s - %(name)s - %(levelname)s - %(uber_message)s"
+        concatf = ConcatFormatter(fmt,
                                   delimiter="; ",
                                   operator="= ",
                                   log_in_color=True,

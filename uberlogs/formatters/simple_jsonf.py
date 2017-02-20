@@ -36,7 +36,6 @@ class SimpleJsonFormatter(UberFormatter):
         """
         return ""
 
-    @profile
     def _get_message_obj(self, record):
         time = floor(record.created)
         if not self.epoch:
@@ -58,7 +57,6 @@ class SimpleJsonFormatter(UberFormatter):
 
         return msg_obj
 
-    @profile
     def format(self, record):
         # create a clone of the record,
         # to make sure we don't change the original

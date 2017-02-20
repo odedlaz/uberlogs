@@ -1,8 +1,4 @@
 import six
-import ujson as json
-from logging import Formatter as LoggingFormatter
-from logging import LogRecord
-from datetime import datetime, tzinfo, timedelta
 from inspect import currentframe as currentframe
 
 from .. import level
@@ -34,14 +30,13 @@ class ConcatFormatter(UberFormatter):
         self.operator = operator
         self.color = log_in_color
 
-    @profile
     def _uber_message(self, record):
         # get the none formatted message (not getMessage())
         # might be a class that represents a string,
         # for example: StringifiableFromEvent in twisted
         message = record.msg \
             if isinstance(record.msg, six.string_types) \
-            else unicode(record.msg)
+            else six.text_type(record.msg)
         if record.uber_extra:
             if self.parse_text:
                 message = message.format(**record.uber_extra)

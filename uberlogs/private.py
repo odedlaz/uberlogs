@@ -1,12 +1,8 @@
 import six
-import ujson as json
 import logging
 import logging.config
 from string import Formatter as StringFormatter
-from datetime import datetime, tzinfo, timedelta
 from inspect import currentframe as currentframe
-from itertools import chain
-from six.moves import builtins
 from random import choice
 
 if six.PY3:
@@ -39,7 +35,6 @@ class BoundedDictionary(dict):
 
 class UberStringFormatter(StringFormatter):
 
-    @profile
     def parse(self, text, silent=False):
         try:
             for field in StringFormatter.parse(self, text):
@@ -49,6 +44,7 @@ class UberStringFormatter(StringFormatter):
             # We silence the error and return nothing
             if not silent:
                 raise
+
 
 string_formatter = UberStringFormatter()
 
@@ -112,10 +108,10 @@ class UberLogRecord(object):
         self.keyword_keys = keyword_keys
         self.code = code
 
+
 valid_chars_transtable = maketrans("[].", "___")
 
 
-@profile
 def text_keywords(text, caller, log_args):
     """
     extract keyword arguments from format text
@@ -146,7 +142,6 @@ def text_keywords(text, caller, log_args):
     return log_msg.text, log_msg.keyword_keys, caller.f_locals.pop("uber_kw")
 
 
-@profile
 def log_message(logger, level, msg, args, exc_info=None, extra=None, **kwargs):
     extra = extra or {}
     if kwargs:

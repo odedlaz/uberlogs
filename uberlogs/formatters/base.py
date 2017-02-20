@@ -3,7 +3,10 @@ from logging import Formatter as LoggingFormatter
 
 class UberFormatter(LoggingFormatter):
 
-    def __init__(self, parse_text=False, include_format_keywords=False, **kwargs):
+    def __init__(self,
+                 parse_text=False,
+                 include_format_keywords=False,
+                 **kwargs):
         super(UberFormatter, self).__init__(**kwargs)
         self.parse_text = parse_text
 
