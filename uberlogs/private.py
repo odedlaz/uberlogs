@@ -150,7 +150,7 @@ def log_message(logger, level, msg, args, exc_info=None, extra=None, **kwargs):
     frame = currentframe()
 
     # _log -> log_message -> profile
-    caller = frame.f_back.f_back.f_back
+    caller = frame.f_back.f_back
 
     # why delete the frame?
     # VERSION: 2 or 3

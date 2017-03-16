@@ -1,7 +1,6 @@
-import pytz
+import maya
 import ujson as json
 from math import floor
-from datetime import datetime
 from .base import UberFormatter
 from logging import Formatter as LoggingFormatter
 
@@ -37,11 +36,9 @@ class SimpleJsonFormatter(UberFormatter):
         return ""
 
     def _get_message_obj(self, record):
-        time = floor(record.created)
-        if not self.epoch:
-            dt = datetime.utcfromtimestamp(record.created)
-            time = dt.replace(tzinfo=pytz.utc,
-                              microsecond=0).isoformat()
+        time = floor(record.created) if self.epoch else \
+            maya.MayaDT(record.created).iso8601()
+
         msg_obj = {
             MESSAGE: record.getMessage(),
             LOGGER: record.name,
