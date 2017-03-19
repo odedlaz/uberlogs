@@ -31,7 +31,7 @@ class PyTest(TestCommand):
 
 setup(
     name='uberlogs',
-    version=open("VERSION").read(),
+    version='0.0.11',
     url='http://github.com/odedlaz/uberlogs',
     license='MIT License',
     author='Oded Lazar',
