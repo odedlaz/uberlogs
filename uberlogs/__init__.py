@@ -1,4 +1,4 @@
-__version__ = '0.0.11'
+__version__ = '0.0.12'
 
 # NOQA -> silence flake8 warnings
 from six.moves import builtins  # NOQA
