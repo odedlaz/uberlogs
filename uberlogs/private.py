@@ -4,7 +4,6 @@ import logging.config
 from string import Formatter as StringFormatter
 from inspect import currentframe as currentframe
 from random import choice
-
 if six.PY3:
     from _string import formatter_field_name_split
     maketrans = str.maketrans
@@ -125,7 +124,6 @@ def text_keywords(text, caller, log_args):
     # 2. Otherwise, Compile the log and cache it in the temporary cache
     # The idea behind these two caches is that logs might be written once
     # and we don't want to cache them forever.
-
     log_msg = persistent_cache.get(text)
     if log_msg is None:
         log_msg = temporary_cache.pop(text, None)
@@ -157,6 +155,9 @@ def log_message(logger, level, msg, args, exc_info=None, extra=None, **kwargs):
     # VERSION: 2 or 3
     # https://docs.python.org/VERSION/library/inspect.html#the-interpreter-stack
     del frame
+    if not isinstance(msg, six.string_types):
+        raise ValueError(("message has to be a string, "
+                          "got: {}({})").format(str(msg), str(type(msg))))
 
     msg, keyword_keys, keywords = text_keywords(text=msg,
                                                 caller=caller,
