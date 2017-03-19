@@ -77,7 +77,7 @@ class UberLogRecord(object):
         valid_text = text
         code = ["uber_kw = {}"]
         for kw, valid_kw in six.iteritems(keywords):
-            vfn = valid_kw.replace('"', '/\"')
+            vfn = valid_kw.replace('"', r'\"')
             code.append('uber_kw["{vfn}"] = {fn}'.format(vfn=vfn,
                                                          fn=kw))
             valid_text = valid_text.replace(kw, valid_kw)
