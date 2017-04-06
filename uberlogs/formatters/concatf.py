@@ -17,7 +17,8 @@ class ConcatFormatter(UberFormatter):
         level.CRITICAL: '\x1b[35m',
     }
 
-    def __init__(self, operator=":",
+    def __init__(self,
+                 operator=":",
                  delimiter=";",
                  log_in_color=False,
                  **kwargs):
