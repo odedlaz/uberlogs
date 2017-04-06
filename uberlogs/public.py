@@ -44,7 +44,7 @@ def install(default_path='logging.json',
         from .formatters import ConcatFormatter
         handler = logging.StreamHandler(sys.stdout)
         fmt = "%(asctime)s - %(name)s - %(levelname)s - %(uber_message)s"
-        concatf = ConcatFormatter(fmt,
+        concatf = ConcatFormatter(fmt=fmt,
                                   delimiter="; ",
                                   operator="= ",
                                   log_in_color=True,
