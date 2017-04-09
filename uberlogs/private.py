@@ -143,8 +143,9 @@ def text_keywords(text, caller, log_args):
 
 def log_message(logger, level, msg, args, exc_info=None, extra=None, **kwargs):
     extra = extra or {}
-    if kwargs:
-        extra.update(kwargs)
+
+    extra.update(kwargs.pop("static"))
+    extra.update(kwargs)
 
     frame = currentframe()
 

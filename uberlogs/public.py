@@ -12,12 +12,21 @@ except ImportError:
     rewire_twisted_log = False
 
 
-def getLogger(name):
+def getLogger(name, static=None):
+    """
+    get the logger for given name.
+
+    if a static is supplied, each value in it will be
+    be injected to every log line
+    """
     if not isinstance(name, str):
         name = name.__class__.__name__
 
+    if static and not isinstance(static, dict):
+        raise ValueError("static has to be a dict")
+
     logger = logging.getLogger(name)
-    logger._log = partial(log_message, logger)
+    logger._log = partial(log_message, logger, static=static or {})
     return logger
 
 
@@ -39,6 +48,7 @@ def install(default_path='logging.json',
         with open(path, 'rt') as f:
             import ujson as json
             content = json.load(f)
+
         logging.config.dictConfig(content)
     else:
         from .formatters import ConcatFormatter
