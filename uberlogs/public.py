@@ -19,11 +19,14 @@ def getLogger(name, static=None):
     if a static is supplied, each value in it will be
     be injected to every log line
     """
-    if not isinstance(name, str):
-        name = name.__class__.__name__
-
     if static and not isinstance(static, dict):
         raise ValueError("static has to be a dict")
+
+    if not isinstance(name, str):
+        name = name.__class__.__name__
+        if static:
+            name = "{name}[{addr}]".format(name=name,
+                                           addr=hex(id(name)))
 
     logger = logging.getLogger(name)
     logger._log = partial(log_message, logger, static=static or {})
