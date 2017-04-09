@@ -23,11 +23,10 @@ def getLogger(name, static=None):
         raise ValueError("static has to be a dict")
 
     if not isinstance(name, str):
-        name = name.__class__.__name__
+        name, obj = name.__class__.__name__, name
         if static:
             name = "{name}[{addr}]".format(name=name,
-                                           addr=hex(id(name)))
-
+                                           addr=hex(id(obj)))
     logger = logging.getLogger(name)
     logger._log = partial(log_message, logger, static=static or {})
     return logger
